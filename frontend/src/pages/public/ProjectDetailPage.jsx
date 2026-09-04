@@ -44,6 +44,9 @@ export default function ProjectDetailPage() {
         ]);
         setProject(projData);
         if (profData) setProfile(profData);
+        if (projData?.title) {
+          document.title = `${projData.title} — Case Study | Petla Siva Kumar`;
+        }
       } catch (err) {
         console.error('Failed to load project details:', err);
         setError('Project not found or unpublished.');
@@ -52,6 +55,9 @@ export default function ProjectDetailPage() {
       }
     };
     loadProject();
+    return () => {
+      document.title = "Petla Siva Kumar — UI/UX Designer & Frontend Developer";
+    };
   }, [slug]);
 
   if (loading) {

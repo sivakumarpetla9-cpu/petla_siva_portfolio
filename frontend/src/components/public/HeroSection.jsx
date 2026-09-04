@@ -107,27 +107,27 @@ export default function HeroSection({ profile }) {
             >
               <span className="text-xs uppercase tracking-wider text-gray-500 font-semibold mr-2">Connect:</span>
               {profile?.github_url && (
-                <a href={profile.github_url} target="_blank" rel="noreferrer" className="p-2.5 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl border border-white/10 transition-colors">
+                <a href={profile.github_url} target="_blank" rel="noreferrer" aria-label="GitHub Profile" className="p-2.5 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl border border-white/10 transition-colors">
                   <Github className="w-4 h-4" />
                 </a>
               )}
               {profile?.figma_url && (
-                <a href={profile.figma_url} target="_blank" rel="noreferrer" className="p-2.5 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl border border-white/10 transition-colors">
+                <a href={profile.figma_url} target="_blank" rel="noreferrer" aria-label="Figma Profile" className="p-2.5 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl border border-white/10 transition-colors">
                   <Figma className="w-4 h-4" />
                 </a>
               )}
               {profile?.linkedin_url && (
-                <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="p-2.5 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl border border-white/10 transition-colors">
+                <a href={profile.linkedin_url} target="_blank" rel="noreferrer" aria-label="LinkedIn Profile" className="p-2.5 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl border border-white/10 transition-colors">
                   <Linkedin className="w-4 h-4" />
                 </a>
               )}
               {profile?.twitter_url && (
-                <a href={profile.twitter_url} target="_blank" rel="noreferrer" className="p-2.5 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl border border-white/10 transition-colors">
+                <a href={profile.twitter_url} target="_blank" rel="noreferrer" aria-label="Twitter Profile" className="p-2.5 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl border border-white/10 transition-colors">
                   <Twitter className="w-4 h-4" />
                 </a>
               )}
               {profile?.dribbble_url && (
-                <a href={profile.dribbble_url} target="_blank" rel="noreferrer" className="p-2.5 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl border border-white/10 transition-colors">
+                <a href={profile.dribbble_url} target="_blank" rel="noreferrer" aria-label="Dribbble Profile" className="p-2.5 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl border border-white/10 transition-colors">
                   <Dribbble className="w-4 h-4" />
                 </a>
               )}
