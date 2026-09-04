@@ -1,15 +1,25 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-3y%9+@a-c3a+tnde)ntu5%-x%a+d68k)&=_#4rre^6k*@&^pvx')
-
+# DEBUG defaults to True for local development, set DJANGO_DEBUG=False in production
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ['true', '1', 'yes']
 
-ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '*').split(',') if h.strip()]
+# SECRET_KEY validation: Require DJANGO_SECRET_KEY when DEBUG is False in production
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-dev-only-secret-key-do-not-use-in-production'
+    else:
+        raise ImproperlyConfigured("DJANGO_SECRET_KEY environment variable must be set in production when DJANGO_DEBUG=False.")
+
+# Host Configuration
+raw_hosts = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,.onrender.com')
+ALLOWED_HOSTS = [h.strip() for h in raw_hosts.split(',') if h.strip()]
 
 # Application definition
 INSTALLED_APPS = [
@@ -32,6 +42,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -59,9 +70,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'portfolio_backend.wsgi.application'
 
-# Database Configuration (Defaults to SQLite out of the box, supports Postgres if configured)
-DB_ENGINE = os.environ.get('DB_ENGINE', 'sqlite3')
-if DB_ENGINE == 'postgresql' or 'POSTGRES_DB' in os.environ:
+# Database Configuration (SQLite default out-of-the-box, PostgreSQL if DATABASE_URL or POSTGRES_DB set)
+if 'DATABASE_URL' in os.environ:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(conn_max_age=600, ssl_require=False)
+    }
+elif 'POSTGRES_DB' in os.environ or os.environ.get('DB_ENGINE') == 'postgresql':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -105,14 +120,22 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# CORS Settings
-CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL', 'True').lower() in ['true', '1', 'yes']
-if not CORS_ALLOW_ALL_ORIGINS:
-    CORS_ALLOWED_ORIGINS = [o.strip() for o in os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',') if o.strip()]
+# CORS Security Settings
+CORS_ALLOW_ALL_ORIGINS = DEBUG and (os.environ.get('CORS_ALLOW_ALL', 'False').lower() in ['true', '1', 'yes'])
+
+default_cors = 'http://localhost:3000,http://127.0.0.1:3000,https://*.vercel.app'
+raw_cors = os.environ.get('CORS_ALLOWED_ORIGINS', default_cors)
+CORS_ALLOWED_ORIGINS = [o.strip() for o in raw_cors.split(',') if o.strip() and not o.strip().startswith('https://*.')]
+
+# Allow vercel domain patterns if configured
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -122,13 +145,13 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'api.permissions.IsAdminUserOrReadOnly',
     ),
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': False,
     'AUTH_HEADER_TYPES': ('Bearer',),

@@ -1,28 +1,41 @@
+import os
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from api.models import Profile, Project, Experience, Education, Skill, Certification
 
 class Command(BaseCommand):
-    help = "Seed database with initial admin superuser and sample portfolio content."
+    help = "Seed database with initial profile data and superuser using environment variables."
 
     def handle(self, *args, **options):
         self.stdout.write("Seeding database...")
 
-        # 1. Admin Superuser
-        if not User.objects.filter(username="sivapetla").exists():
-            User.objects.create_superuser(
-                username="sivapetla",
-                email="siva.petla@example.com",
-                password="Siva@123"
-            )
-            self.stdout.write(self.style.SUCCESS("Superuser created: username 'sivapetla', password 'Siva@123'"))
-        else:
-            admin_user = User.objects.get(username="sivapetla")
-            admin_user.set_password("Siva@123")
-            admin_user.save()
-            self.stdout.write(self.style.SUCCESS("Superuser 'sivapetla' password set to 'Siva@123'"))
+        # 1. Admin Superuser from Environment Variables
+        admin_username = os.environ.get('ADMIN_USERNAME', 'sivapetla')
+        admin_email = os.environ.get('ADMIN_EMAIL', 'siva.petla@example.com')
+        admin_password = os.environ.get('ADMIN_PASSWORD', None)
 
-        # 2. Profile
+        if not User.objects.filter(username=admin_username).exists():
+            if not admin_password:
+                admin_password = 'Siva@123'  # Fallback default for local initial creation only
+            user = User.objects.create_superuser(
+                username=admin_username,
+                email=admin_email,
+                password=admin_password
+            )
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+            self.stdout.write(self.style.SUCCESS(f"Superuser '{admin_username}' created successfully."))
+        else:
+            user = User.objects.get(username=admin_username)
+            if admin_password:
+                user.set_password(admin_password)
+                user.save()
+                self.stdout.write(self.style.SUCCESS(f"Updated password for superuser '{admin_username}' from environment variable."))
+            else:
+                self.stdout.write(f"Superuser '{admin_username}' exists. Password unchanged.")
+
+        # 2. Profile Initial Data
         profile, created = Profile.objects.get_or_create(id=1)
         profile.full_name = "Petla Siva Kumar"
         profile.title = "UI/UX Designer & Frontend Developer (Fresher)"
@@ -39,20 +52,20 @@ class Command(BaseCommand):
         profile.figma_url = "https://figma.com"
         profile.dribbble_url = "https://dribbble.com"
         profile.save()
-        self.stdout.write("Profile updated for Petla Siva Kumar.")
+        self.stdout.write("Profile initialized for Petla Siva Kumar.")
 
-        # Update experiences if any
-        Experience.objects.all().delete()
-        Experience.objects.create(
-            company="Self-Driven Projects & Internships",
-            role="UI/UX & Frontend Trainee",
-            location="Remote",
-            employment_type="Internship",
-            start_date="2024",
-            end_date="Present",
-            is_current=True,
-            description="Designed and engineered responsive web applications in React, Vite, Tailwind CSS, and Django REST Framework. Built custom component libraries and user flows.",
-            order=1
-        )
+        # 3. Experience Initial Data if empty
+        if Experience.objects.count() == 0:
+            Experience.objects.create(
+                company="Self-Driven Projects & Internships",
+                role="UI/UX & Frontend Trainee",
+                location="Remote",
+                employment_type="Internship",
+                start_date="2024",
+                end_date="Present",
+                is_current=True,
+                description="Designed and engineered responsive web applications in React, Vite, Tailwind CSS, and Django REST Framework. Built custom component libraries and user flows.",
+                order=1
+            )
 
-        self.stdout.write(self.style.SUCCESS("Database re-seeded successfully!"))
+        self.stdout.write(self.style.SUCCESS("Database seeding complete!"))
