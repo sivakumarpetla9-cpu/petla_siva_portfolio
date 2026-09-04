@@ -69,6 +69,12 @@ export const fetchCurrentUser = async () => {
   return res.data;
 };
 
+const extractArray = (data) => {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.results)) return data.results;
+  return [];
+};
+
 /* Public & Admin API calls */
 export const fetchProfile = async () => {
   const res = await api.get('/profile/');
@@ -85,7 +91,7 @@ export const updateProfile = async (id, data) => {
 
 export const fetchProjects = async (params = {}) => {
   const res = await api.get('/projects/', { params });
-  return res.data;
+  return extractArray(res.data);
 };
 
 export const fetchProjectBySlug = async (slug) => {
@@ -132,7 +138,7 @@ export const toggleProjectFeature = async (id) => {
 /* Experience */
 export const fetchExperiences = async () => {
   const res = await api.get('/experience/');
-  return res.data;
+  return extractArray(res.data);
 };
 
 export const createExperience = async (data) => {
@@ -159,7 +165,7 @@ export const deleteExperience = async (id) => {
 /* Education */
 export const fetchEducation = async () => {
   const res = await api.get('/education/');
-  return res.data;
+  return extractArray(res.data);
 };
 
 export const createEducation = async (data) => {
@@ -181,7 +187,7 @@ export const deleteEducation = async (id) => {
 export const fetchSkills = async (category = '') => {
   const params = category ? { category } : {};
   const res = await api.get('/skills/', { params });
-  return res.data;
+  return extractArray(res.data);
 };
 
 export const createSkill = async (data) => {
@@ -202,7 +208,7 @@ export const deleteSkill = async (id) => {
 /* Certifications */
 export const fetchCertifications = async () => {
   const res = await api.get('/certifications/');
-  return res.data;
+  return extractArray(res.data);
 };
 
 export const createCertification = async (data) => {
@@ -229,7 +235,7 @@ export const deleteCertification = async (id) => {
 /* Media */
 export const fetchMedia = async () => {
   const res = await api.get('/media/');
-  return res.data;
+  return extractArray(res.data);
 };
 
 export const uploadMedia = async (formData) => {
