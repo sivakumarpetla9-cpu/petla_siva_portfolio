@@ -10,17 +10,16 @@ class Command(BaseCommand):
         self.stdout.write("Seeding database...")
 
         # 1. Admin Superuser from Environment Variables
-        admin_username = os.environ.get('ADMIN_USERNAME', 'sivapetla')
+        admin_username = os.environ.get('ADMIN_USERNAME', 'siva')
         admin_email = os.environ.get('ADMIN_EMAIL', 'siva.petla@example.com')
         admin_password = os.environ.get('ADMIN_PASSWORD', None)
 
         if not User.objects.filter(username=admin_username).exists():
-            if not admin_password:
-                admin_password = 'Siva@123'  # Fallback default for local initial creation only
+            pwd = admin_password if admin_password else 'Siva@123'
             user = User.objects.create_superuser(
                 username=admin_username,
                 email=admin_email,
-                password=admin_password
+                password=pwd
             )
             user.is_staff = True
             user.is_superuser = True
@@ -33,7 +32,9 @@ class Command(BaseCommand):
                 user.save()
                 self.stdout.write(self.style.SUCCESS(f"Updated password for superuser '{admin_username}' from environment variable."))
             else:
-                self.stdout.write(f"Superuser '{admin_username}' exists. Password unchanged.")
+                user.set_password('Siva@123')
+                user.save()
+                self.stdout.write(f"Superuser '{admin_username}' password updated.")
 
         # 2. Profile Initial Data
         profile, created = Profile.objects.get_or_create(id=1)

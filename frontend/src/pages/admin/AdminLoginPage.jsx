@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Lock, User, KeyRound, AlertCircle, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
@@ -23,15 +23,10 @@ export default function AdminLoginPage() {
       navigate('/admin');
     } catch (err) {
       console.error('Login error:', err);
-      setError('Invalid username or password. Default admin: sivapetla / Siva@123');
+      setError('Invalid username or password.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleFillDemo = () => {
-    setUsername('sivapetla');
-    setPassword('Siva@123');
   };
 
   return (
@@ -48,21 +43,6 @@ export default function AdminLoginPage() {
           </div>
           <h1 className="text-2xl font-extrabold text-white tracking-tight">Admin CMS Portal</h1>
           <p className="text-xs text-gray-400">Sign in to manage projects, content & portfolio settings.</p>
-        </div>
-
-        {/* Demo fill quick helper pill */}
-        <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2 text-indigo-300">
-            <KeyRound className="w-4 h-4 text-indigo-400" />
-            <span>Default Superuser: <strong>sivapetla / Siva@123</strong></span>
-          </div>
-          <button
-            type="button"
-            onClick={handleFillDemo}
-            className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all text-[11px]"
-          >
-            Auto-fill
-          </button>
         </div>
 
         {error && (
@@ -85,7 +65,7 @@ export default function AdminLoginPage() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
+                placeholder="Enter username"
                 className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
               />
             </div>
