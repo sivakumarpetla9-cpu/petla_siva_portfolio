@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+// Render production backend API URL
+const RENDER_PROD_API = 'https://petla-siva-portfolio.onrender.com/api';
+
+// Use VITE_API_URL if available; in dev fallback to '/api' for Vite dev proxy; in production fallback to direct Render API
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? '/api' : RENDER_PROD_API);
 
 const api = axios.create({
   baseURL: API_BASE,

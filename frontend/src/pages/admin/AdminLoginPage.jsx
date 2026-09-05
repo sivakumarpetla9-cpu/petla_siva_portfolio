@@ -17,13 +17,20 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+    const cleanUsername = username.trim();
     try {
-      await login(username, password);
+      await login(cleanUsername, password);
       showToast('Logged in successfully', 'success');
       navigate('/admin');
     } catch (err) {
       console.error('Login error:', err);
-      setError('Invalid username or password.');
+      const errorMsg =
+        err.response?.data?.detail ||
+        (err.response?.status === 401 ? 'Invalid username or password.' : null) ||
+        (err.message === 'Network Error' || !err.response
+          ? 'Cannot connect to backend server. Please check your internet connection or verify the backend is running.'
+          : 'Authentication failed. Please check your credentials.');
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -65,6 +72,9 @@ export default function AdminLoginPage() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
                 placeholder="Enter username"
                 className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
               />
