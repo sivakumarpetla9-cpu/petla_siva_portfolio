@@ -136,6 +136,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # CORS Security Settings
+from corsheaders.defaults import default_headers
+
 CORS_ALLOW_ALL_ORIGINS = DEBUG and (os.environ.get('CORS_ALLOW_ALL', 'False').lower() in ['true', '1', 'yes'])
 
 default_cors = 'http://localhost:3000,http://127.0.0.1:3000,https://*.vercel.app'
@@ -148,6 +150,12 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'cache-control',
+    'pragma',
+    'expires',
+]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

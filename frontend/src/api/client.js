@@ -12,21 +12,15 @@ const api = axios.create({
   baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json',
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0',
   },
 });
 
-// Attach JWT token and anti-cache headers to requests
+// Attach JWT token and cache-busting parameter to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
-  config.headers['Pragma'] = 'no-cache';
-  config.headers['Expires'] = '0';
 
   // Force cache-busting for all GET requests so Device A and Device B always get live PostgreSQL data
   if (config.method?.toLowerCase() === 'get') {
