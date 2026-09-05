@@ -71,7 +71,18 @@ export default function DashboardHome() {
       {/* Welcome Banner */}
       <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-extrabold text-white">Dashboard Overview</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-extrabold text-white">Dashboard Overview</h2>
+            {stats?.database_engine && (
+              <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
+                stats.database_engine === 'postgresql'
+                  ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+              }`}>
+                ● DB: {stats.database_engine.toUpperCase()}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-gray-400 mt-1">Manage all your portfolio content, projects, media, and site settings dynamically.</p>
         </div>
 

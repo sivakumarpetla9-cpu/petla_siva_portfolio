@@ -49,6 +49,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'api.middleware.DisableClientCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'portfolio_backend.urls'
@@ -70,11 +71,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'portfolio_backend.wsgi.application'
 
-# Database Configuration (SQLite default out-of-the-box, PostgreSQL if DATABASE_URL or POSTGRES_DB set)
-if 'DATABASE_URL' in os.environ:
+# Database Configuration (PostgreSQL primary via DATABASE_URL, fallback to SQLite for local dev)
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
     import dj_database_url
+    # Ensure postgresql:// scheme is accepted
+    db_url = DATABASE_URL
+    if db_url.startswith('postgres://'):
+        db_url = db_url.replace('postgres://', 'postgresql://', 1)
     DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=False)
+        'default': dj_database_url.config(
+            default=db_url,
+            conn_max_age=600,
+            conn_health_checks=True
+        )
     }
 elif 'POSTGRES_DB' in os.environ or os.environ.get('DB_ENGINE') == 'postgresql':
     DATABASES = {

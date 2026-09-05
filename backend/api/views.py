@@ -147,6 +147,10 @@ class MediaViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes([IsAdminUserOnly])
 def dashboard_stats(request):
+    from django.db import connection
+    db_engine = connection.vendor  # 'postgresql' or 'sqlite'
+    db_name = str(connection.settings_dict.get('NAME', 'unknown'))
+
     total_projects = Project.objects.count()
     published_projects = Project.objects.filter(is_published=True).count()
     draft_projects = Project.objects.filter(is_published=False).count()
@@ -162,6 +166,8 @@ def dashboard_stats(request):
     ).data
 
     return Response({
+        'database_engine': db_engine,
+        'database_name': db_name.split('/')[-1] if '/' in db_name else db_name,
         'total_projects': total_projects,
         'published_projects': published_projects,
         'draft_projects': draft_projects,

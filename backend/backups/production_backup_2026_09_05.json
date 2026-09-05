@@ -1,0 +1,60 @@
+{
+  "profile": {
+    "id": 1,
+    "avatar_display_url": "/media/profile/petla_siva_kumar.jpg",
+    "resume_display_url": "",
+    "full_name": "Petla Siva Kumar",
+    "title": "UI/UX Designer & Frontend Developer (Fresher)",
+    "bio": "Passionate fresher product designer and engineer turning complex ideas into intuitive, scalable digital experiences through modern web technologies and design systems.",
+    "hero_headline": "Designing intuitive interfaces. Engineering performant web applications.",
+    "hero_subheading": "Fresher specializing in user-centered product design, responsive frontend architecture, and interactive web experiences.",
+    "avatar": null,
+    "avatar_url": "/media/profile/petla_siva_kumar.jpg",
+    "resume_file": null,
+    "resume_url": "",
+    "email": "petla.sivakumar@example.com",
+    "phone": "+91 98765 43210",
+    "location": "India",
+    "github_url": "https://github.com/sivakumarpetla9-cpu",
+    "linkedin_url": "https://www.linkedin.com/in/siva-kumar-33b206377/",
+    "twitter_url": "https://twitter.com",
+    "figma_url": "https://figma.com",
+    "dribbble_url": "https://dribbble.com",
+    "updated_at": "2026-09-04T21:12:14.913235Z"
+  },
+  "projects": [],
+  "experience": [
+    {
+      "id": 1,
+      "company_logo_display_url": "",
+      "company": "Self-Driven Projects & Internships",
+      "role": "UI/UX & Frontend Trainee",
+      "location": "Remote",
+      "employment_type": "Internship",
+      "start_date": "2024",
+      "end_date": "Present",
+      "is_current": true,
+      "description": "Designed and engineered responsive web applications in React, Vite, Tailwind CSS, and Django REST Framework. Built custom component libraries and user flows.",
+      "company_logo": null,
+      "company_logo_url": "",
+      "order": 1,
+      "created_at": "2026-09-04T21:12:14.914652Z"
+    }
+  ],
+  "education": [],
+  "skills": [],
+  "certifications": [],
+  "media": [],
+  "stats": {
+    "total_projects": 0,
+    "published_projects": 0,
+    "draft_projects": 0,
+    "featured_projects": 0,
+    "total_experience": 1,
+    "total_education": 0,
+    "total_skills": 0,
+    "total_certifications": 0,
+    "total_media": 0,
+    "recent_projects": []
+  }
+}
