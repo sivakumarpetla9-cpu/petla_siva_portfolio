@@ -198,6 +198,9 @@ export default function ProjectDetailPage() {
                 src={getFullImageUrl(project.thumbnail_display_url || project.thumbnail_url)}
                 alt={project.title}
                 className="w-full max-h-[500px] object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
               />
             </motion.div>
           )}
@@ -263,6 +266,9 @@ export default function ProjectDetailPage() {
                       src={getFullImageUrl(imgUrl)}
                       alt={`Gallery ${gIdx + 1}`}
                       className="w-full h-64 object-cover hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        if (e.target.parentElement) e.target.parentElement.style.display = 'none';
+                      }}
                     />
                   </div>
                 ))}

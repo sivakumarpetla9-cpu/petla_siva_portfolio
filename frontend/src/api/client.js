@@ -15,18 +15,60 @@ const api = axios.create({
   },
 });
 
+export const getBackendOrigin = () => {
+  if (import.meta.env.VITE_BACKEND_URL) {
+    return import.meta.env.VITE_BACKEND_URL.replace(/\/+$/, '');
+  }
+  if (import.meta.env.VITE_API_URL) {
+    try {
+      const parsed = new URL(import.meta.env.VITE_API_URL, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+      return parsed.origin;
+    } catch {
+      // fallback
+    }
+  }
+  if (import.meta.env.DEV) {
+    // In dev mode, Vite proxy forwards /media to backend
+    return '';
+  }
+  return 'https://petla-siva-portfolio.onrender.com';
+};
+
 export const getFullImageUrl = (url) => {
   if (!url || typeof url !== 'string') return '';
   const trimmed = url.trim();
   if (!trimmed) return '';
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+
+  // 1. Preserve local object previews and inline data
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
     return trimmed;
   }
-  if (trimmed.startsWith('/media/')) {
-    const backendOrigin = import.meta.env.DEV ? '' : 'https://petla-siva-portfolio.onrender.com';
-    return `${backendOrigin}${trimmed}`;
+
+  // 2. If already an absolute URL
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    // Upgrade insecure Render backend requests to HTTPS to eliminate mixed-content blocking
+    if (trimmed.startsWith('http://') && trimmed.includes('onrender.com')) {
+      return 'https://' + trimmed.slice(7);
+    }
+    return trimmed;
   }
-  return trimmed;
+
+  // 3. Normalize relative media path
+  let cleanPath = trimmed.replace(/^\/+/, '');
+  if (cleanPath.startsWith('media/')) {
+    cleanPath = cleanPath.slice(6);
+  }
+  const mediaPath = `/media/${cleanPath}`;
+
+  const backendOrigin = getBackendOrigin();
+  return `${backendOrigin}${mediaPath}`;
+};
+
+export const resolveAvatarUrl = (profile, fallback = '/petla_siva_kumar.jpg') => {
+  if (!profile) return fallback;
+  const rawUrl = profile.avatar_display_url || profile.avatar_url;
+  const resolved = getFullImageUrl(rawUrl);
+  return resolved || fallback;
 };
 
 export const ALLOWED_IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp'];

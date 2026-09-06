@@ -64,6 +64,10 @@ export default function AboutSection({ profile }) {
                   src={profileAvatar}
                   alt={profile?.full_name || "Petla Siva Kumar"}
                   className="w-full aspect-[4/5] object-cover rounded-2xl group-hover:scale-[1.02] transition-transform duration-500"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/petla_siva_kumar.jpg';
+                  }}
                 />
                 
                 {/* Floating overlay details */}

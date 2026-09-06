@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Image as ImageIcon, Upload, Copy, Check, Trash2, Eye, X, FileText } from 'lucide-react';
-import { fetchMedia, uploadMedia, deleteMedia } from '../../api/client';
+import { fetchMedia, uploadMedia, deleteMedia, getFullImageUrl } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 
 export default function MediaManager() {
@@ -48,7 +48,8 @@ export default function MediaManager() {
   };
 
   const handleCopyLink = (url, id) => {
-    navigator.clipboard.writeText(url);
+    const fullUrl = getFullImageUrl(url);
+    navigator.clipboard.writeText(fullUrl);
     setCopiedId(id);
     showToast('Image URL copied to clipboard!', 'success');
     setTimeout(() => setCopiedId(null), 2000);
@@ -119,8 +120,13 @@ export default function MediaManager() {
             <div key={item.id} className="group glass-panel rounded-2xl overflow-hidden border border-white/10 flex flex-col justify-between hover:border-indigo-500/40 transition-all">
               
               <div className="relative aspect-square bg-gray-950 overflow-hidden cursor-pointer" onClick={() => setSelectedMedia(item)}>
-                {item.file_display_url && item.file_type?.includes('image') ? (
-                  <img src={item.file_display_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                {(item.file_display_url || item.file) && item.file_type?.includes('image') ? (
+                  <img
+                    src={getFullImageUrl(item.file_display_url || item.file)}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center p-4 text-gray-400">
                     <FileText className="w-8 h-8 text-indigo-400" />
@@ -178,7 +184,7 @@ export default function MediaManager() {
             </div>
 
             <div className="max-h-[65vh] overflow-auto rounded-2xl bg-black flex items-center justify-center">
-              <img src={selectedMedia.file_display_url} alt={selectedMedia.title} className="max-h-[60vh] object-contain rounded-2xl" />
+              <img src={getFullImageUrl(selectedMedia.file_display_url || selectedMedia.file)} alt={selectedMedia.title} className="max-h-[60vh] object-contain rounded-2xl" />
             </div>
 
             <div className="flex items-center justify-between pt-2 text-xs text-gray-300">

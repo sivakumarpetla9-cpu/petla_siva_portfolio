@@ -44,6 +44,10 @@ export default function Navbar({ profile }) {
                   src={getFullImageUrl(profile.avatar_display_url || profile.avatar_url)}
                   alt={profile?.full_name || 'Avatar'}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/petla_siva_kumar.jpg';
+                  }}
                 />
               ) : (
                 profile?.full_name ? profile.full_name.charAt(0) : 'A'

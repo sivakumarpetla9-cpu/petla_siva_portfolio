@@ -23,8 +23,14 @@ env.bak/
 venv.bak/
 db.sqlite3
 db.sqlite3-journal
-/backend/db.sqlite3
-/backend/media/
+backend/media/**/*
+!backend/media/**/
+!backend/media/**/.gitkeep
+!backend/media/profile/petla_siva_kumar.jpg
+!backend/media/media_library/2026/09/siva.jpg
+!backend/media/media_library/2026/09/ChatGPT_Image_Sep_3_2026_06_08_55_PM.png
+!backend/media/media_library/2026/09/Sivakumar_resume-3.pdf
+!backend/media/resume/Sivakumar_resume-3.pdf
 /backend/staticfiles/
 backend/backups/*.json
 

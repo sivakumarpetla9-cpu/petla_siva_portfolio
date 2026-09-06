@@ -80,7 +80,7 @@ export default function CertificationsManager() {
       data.append('file', file);
       data.append('title', `Cert - ${formData.name}`);
       const uploaded = await uploadMedia(data);
-      setFormData({ ...formData, certificate_image_url: uploaded.file_display_url });
+      setFormData({ ...formData, certificate_image_url: uploaded.file_display_url || uploaded.file || '' });
       showToast('Certificate document uploaded!', 'success');
     } catch (err) {
       showToast('Upload failed.', 'error');

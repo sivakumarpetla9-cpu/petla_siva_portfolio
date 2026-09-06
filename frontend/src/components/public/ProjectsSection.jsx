@@ -68,11 +68,21 @@ export default function ProjectsSection({ projects = [] }) {
                 {/* Thumbnail Image Container */}
                 <div className="relative aspect-[16/10] overflow-hidden bg-gray-900">
                   {(project.thumbnail_display_url || project.thumbnail_url) ? (
-                    <img
-                      src={getFullImageUrl(project.thumbnail_display_url || project.thumbnail_url)}
-                      alt={project.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                    <>
+                      <img
+                        src={getFullImageUrl(project.thumbnail_display_url || project.thumbnail_url)}
+                        alt={project.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          const fallback = e.target.parentElement?.querySelector('.thumbnail-fallback');
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                      <div className="thumbnail-fallback hidden w-full h-full bg-gradient-to-br from-indigo-900/40 via-violet-900/30 to-slate-900 items-center justify-center p-6 text-center">
+                        <span className="text-xl font-bold text-gray-400">{project.title}</span>
+                      </div>
+                    </>
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-indigo-900/40 via-violet-900/30 to-slate-900 flex items-center justify-center p-6 text-center">
                       <span className="text-xl font-bold text-gray-400">{project.title}</span>

@@ -86,6 +86,10 @@ export default function AdminLayout() {
                   src={getFullImageUrl(profile.avatar_display_url || profile.avatar_url)}
                   alt="Admin Avatar"
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/petla_siva_kumar.jpg';
+                  }}
                 />
               ) : (
                 user?.username ? user.username.charAt(0).toUpperCase() : 'A'

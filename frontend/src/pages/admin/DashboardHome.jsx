@@ -138,11 +138,21 @@ export default function DashboardHome() {
               <div key={proj.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   {(proj.thumbnail_display_url || proj.thumbnail_url) ? (
-                    <img
-                      src={getFullImageUrl(proj.thumbnail_display_url || proj.thumbnail_url)}
-                      alt={proj.title}
-                      className="w-12 h-12 rounded-xl object-cover"
-                    />
+                    <>
+                      <img
+                        src={getFullImageUrl(proj.thumbnail_display_url || proj.thumbnail_url)}
+                        alt={proj.title}
+                        className="w-12 h-12 rounded-xl object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          const fallback = e.target.parentElement?.querySelector('.proj-initial-fallback');
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                      <div className="proj-initial-fallback hidden w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 items-center justify-center text-indigo-400 font-bold">
+                        {proj.title.charAt(0)}
+                      </div>
+                    </>
                   ) : (
                     <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
                       {proj.title.charAt(0)}

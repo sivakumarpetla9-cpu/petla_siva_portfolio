@@ -297,3 +297,65 @@ class PortfolioAPITests(TestCase):
         exp.refresh_from_db()
         self.assertEqual(exp.work_mode, 'Hybrid')
         self.assertEqual(exp.location, 'Hyderabad, Telangana, India')
+
+    # 19. Media URL Resolution & Normalization
+    def test_media_url_resolution(self):
+        from api.utils import build_absolute_media_url
+
+        # External URLs preserved
+        self.assertEqual(
+            build_absolute_media_url('https://images.unsplash.com/photo-1'),
+            'https://images.unsplash.com/photo-1'
+        )
+        # Insecure onrender upgraded to HTTPS
+        self.assertEqual(
+            build_absolute_media_url('http://petla-siva-portfolio.onrender.com/media/test.png'),
+            'https://petla-siva-portfolio.onrender.com/media/test.png'
+        )
+        # Relative with leading slash normalized
+        self.assertTrue(
+            build_absolute_media_url('/media/profile/pic.jpg').endswith('/media/profile/pic.jpg')
+        )
+        # Relative un-slashed path normalized
+        self.assertTrue(
+            build_absolute_media_url('media_library/2026/09/sample.png').endswith('/media/media_library/2026/09/sample.png')
+        )
+        # Empty or null handled safely
+        self.assertEqual(build_absolute_media_url(''), '')
+        self.assertEqual(build_absolute_media_url(None), '')
+
+    # 20. Profile Serializer Media Display URLs
+    def test_profile_serializer_media_urls(self):
+        from api.serializers import ProfileSerializer
+        profile = Profile.objects.create(
+            full_name="Petla Siva Kumar",
+            avatar_url="profile/petla_siva_kumar.jpg",
+            resume_url="resume/siva_cv.pdf"
+        )
+        # Without request context
+        data = ProfileSerializer(profile).data
+        self.assertTrue(data['avatar_display_url'].endswith('/media/profile/petla_siva_kumar.jpg'))
+        self.assertTrue(data['resume_display_url'].endswith('/media/resume/siva_cv.pdf'))
+
+        # With request context
+        response = self.client.get('/api/profile/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['avatar_display_url'].startswith('http'))
+        self.assertTrue(response.data['avatar_display_url'].endswith('/media/profile/petla_siva_kumar.jpg'))
+
+    # 21. Project Serializer Gallery & Thumbnail Media Display URLs
+    def test_project_serializer_media_urls(self):
+        from api.serializers import ProjectSerializer
+        project = Project.objects.create(
+            title="Gallery Media Test",
+            slug="gallery-media-test",
+            category="UI/UX",
+            thumbnail_url="projects/thumbnails/thumb.webp",
+            gallery_images=["media_library/2026/09/g1.webp", "https://images.unsplash.com/photo-2"]
+        )
+        data = ProjectSerializer(project).data
+        self.assertTrue(data['thumbnail_display_url'].endswith('/media/projects/thumbnails/thumb.webp'))
+        self.assertEqual(len(data['gallery_display_images']), 2)
+        self.assertTrue(data['gallery_display_images'][0].endswith('/media/media_library/2026/09/g1.webp'))
+        self.assertEqual(data['gallery_display_images'][1], "https://images.unsplash.com/photo-2")
+

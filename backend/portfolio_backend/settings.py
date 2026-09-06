@@ -21,6 +21,17 @@ if not SECRET_KEY:
 raw_hosts = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,.onrender.com')
 ALLOWED_HOSTS = [h.strip() for h in raw_hosts.split(',') if h.strip()]
 
+# Reverse Proxy & SSL Configuration (Render / Production HTTPS)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
+# Canonical Backend Base URL
+BACKEND_BASE_URL = os.environ.get(
+    'BACKEND_BASE_URL',
+    'https://petla-siva-portfolio.onrender.com' if not DEBUG else 'http://127.0.0.1:8000'
+)
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -140,7 +151,7 @@ from corsheaders.defaults import default_headers
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG and (os.environ.get('CORS_ALLOW_ALL', 'False').lower() in ['true', '1', 'yes'])
 
-default_cors = 'http://localhost:3000,http://127.0.0.1:3000,https://*.vercel.app'
+default_cors = 'http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,https://*.vercel.app'
 raw_cors = os.environ.get('CORS_ALLOWED_ORIGINS', default_cors)
 CORS_ALLOWED_ORIGINS = [o.strip() for o in raw_cors.split(',') if o.strip() and not o.strip().startswith('https://*.')]
 
