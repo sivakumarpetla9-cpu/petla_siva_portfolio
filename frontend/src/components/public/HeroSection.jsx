@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Mail, Sparkles, Code, Palette, MapPin } from 'lucide-react';
 import { Github, Linkedin, Twitter, Dribbble, Figma } from '../icons/BrandIcons';
+import { getFullImageUrl } from '../../api/client';
 
 export default function HeroSection({ profile }) {
   return (
@@ -154,7 +155,7 @@ export default function HeroSection({ profile }) {
                 <div className="flex items-center gap-4 pb-6 border-b border-white/10">
                   <div className="relative">
                     <img
-                      src={profile?.avatar_display_url || profile?.avatar_url || '/petla_siva_kumar.jpg'}
+                      src={getFullImageUrl(profile?.avatar_display_url || profile?.avatar_url) || '/petla_siva_kumar.jpg'}
                       alt={profile?.full_name || 'Petla Siva Kumar'}
                       className="w-20 h-20 rounded-2xl object-cover ring-2 ring-indigo-500/50"
                       onError={(e) => { e.target.onerror = null; e.target.src = '/petla_siva_kumar.jpg'; }}

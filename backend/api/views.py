@@ -40,11 +40,26 @@ class ProfileViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(profile, context={'request': request})
         return Response(serializer.data)
 
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if 'avatar_url' in self.request.data and instance.avatar:
+            instance.avatar = None
+            instance.save(update_fields=['avatar'])
+        if 'resume_url' in self.request.data and instance.resume_file:
+            instance.resume_file = None
+            instance.save(update_fields=['resume_file'])
+
 
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     permission_classes = [IsAdminUserOrReadOnly]
     lookup_field = 'pk'
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if 'thumbnail_url' in self.request.data and instance.thumbnail:
+            instance.thumbnail = None
+            instance.save(update_fields=['thumbnail'])
 
     def get_queryset(self):
         queryset = Project.objects.all()

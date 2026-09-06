@@ -4,7 +4,7 @@ import {
   FolderKanban, Plus, Search, Eye, EyeOff, Star, Edit, Trash2,
   AlertTriangle, ExternalLink, ArrowRight
 } from 'lucide-react';
-import { fetchProjects, deleteProject, toggleProjectPublish, toggleProjectFeature } from '../../api/client';
+import { fetchProjects, deleteProject, toggleProjectPublish, toggleProjectFeature, getFullImageUrl } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 
 export default function ProjectsManager() {
@@ -148,8 +148,12 @@ export default function ProjectsManager() {
                     
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-4">
-                        {proj.thumbnail_display_url ? (
-                          <img src={proj.thumbnail_display_url} alt={proj.title} className="w-12 h-12 rounded-xl object-cover" />
+                        {(proj.thumbnail_display_url || proj.thumbnail_url) ? (
+                          <img
+                            src={getFullImageUrl(proj.thumbnail_display_url || proj.thumbnail_url)}
+                            alt={proj.title}
+                            className="w-12 h-12 rounded-xl object-cover"
+                          />
                         ) : (
                           <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center font-bold text-indigo-400">
                             {proj.title.charAt(0)}

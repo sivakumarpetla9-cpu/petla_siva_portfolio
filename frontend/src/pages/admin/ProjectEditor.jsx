@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, Save, Plus, Trash2, Upload, Sparkles, Image,
-  Layers, Target, Users, Layout, Palette, ExternalLink, Award, Lightbulb
+  Layers, Target, Users, Layout, Palette, ExternalLink, Award, Lightbulb,
+  Loader2, RefreshCw
 } from 'lucide-react';
 import { Github, Figma } from '../../components/icons/BrandIcons';
-import { fetchProjectById, createProject, updateProject, uploadMedia } from '../../api/client';
+import {
+  fetchProjectById, createProject, updateProject, uploadMedia,
+  getFullImageUrl, validateImageFile
+} from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 
 const CASE_STUDY_SECTION_TYPES = [
@@ -30,6 +34,13 @@ export default function ProjectEditor() {
 
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
+  const [thumbnailUploading, setThumbnailUploading] = useState(false);
+  const [thumbnailPreview, setThumbnailPreview] = useState(null);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const [galleryUploadCount, setGalleryUploadCount] = useState(0);
+
+  const thumbnailInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -131,36 +142,92 @@ export default function ProjectEditor() {
   const handleThumbnailUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      showToast(validation.error, 'error');
+      if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
+      return;
+    }
+
+    const tempBlobUrl = URL.createObjectURL(file);
+    setThumbnailPreview(tempBlobUrl);
+    setThumbnailUploading(true);
+
     try {
       const data = new FormData();
       data.append('file', file);
-      data.append('title', `Thumbnail for ${formData.title}`);
+      data.append('title', `Thumbnail - ${formData.title || 'Project'}`);
       const uploaded = await uploadMedia(data);
-      setFormData({ ...formData, thumbnail_url: uploaded.file_display_url });
-      showToast('Thumbnail uploaded to media library!', 'success');
+      const permanentUrl = uploaded.file_display_url || uploaded.file || '';
+      setFormData((prev) => ({ ...prev, thumbnail_url: permanentUrl }));
+      showToast('Thumbnail uploaded successfully!', 'success');
     } catch (err) {
-      showToast('Thumbnail upload failed.', 'error');
+      console.error('Thumbnail upload error:', err);
+      const errorMsg =
+        err.response?.data?.detail ||
+        err.response?.data?.file?.[0] ||
+        err.response?.data?.message ||
+        'Thumbnail upload failed. Please try again.';
+      showToast(errorMsg, 'error');
+    } finally {
+      URL.revokeObjectURL(tempBlobUrl);
+      setThumbnailPreview(null);
+      setThumbnailUploading(false);
+      if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
     }
   };
 
   const handleGalleryUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
+
+    const validFiles = [];
+    for (const file of files) {
+      const val = validateImageFile(file);
+      if (!val.valid) {
+        showToast(`${file.name}: ${val.error}`, 'error');
+      } else {
+        validFiles.push(file);
+      }
+    }
+
+    if (validFiles.length === 0) {
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
+      return;
+    }
+
+    setGalleryUploading(true);
+    setGalleryUploadCount(validFiles.length);
+
     try {
-      const uploadedUrls = [];
-      for (const file of files) {
+      const uploadPromises = validFiles.map(async (file) => {
         const data = new FormData();
         data.append('file', file);
+        data.append('title', `Gallery - ${file.name}`);
         const uploaded = await uploadMedia(data);
-        uploadedUrls.push(uploaded.file_display_url);
-      }
-      setFormData({
-        ...formData,
-        gallery_images: [...formData.gallery_images, ...uploadedUrls],
+        return uploaded.file_display_url || uploaded.file || '';
       });
-      showToast(`${files.length} gallery image(s) uploaded!`, 'success');
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      const successfulUrls = uploadedUrls.filter(Boolean);
+
+      setFormData((prev) => ({
+        ...prev,
+        gallery_images: [...prev.gallery_images, ...successfulUrls],
+      }));
+      showToast(`${successfulUrls.length} gallery image(s) uploaded successfully!`, 'success');
     } catch (err) {
-      showToast('Gallery upload failed.', 'error');
+      console.error('Gallery upload error:', err);
+      const errorMsg =
+        err.response?.data?.detail ||
+        err.response?.data?.file?.[0] ||
+        'Failed to upload some or all gallery images.';
+      showToast(errorMsg, 'error');
+    } finally {
+      setGalleryUploading(false);
+      setGalleryUploadCount(0);
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
     }
   };
 
@@ -401,58 +468,188 @@ export default function ProjectEditor() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Thumbnail */}
           <div className="space-y-3">
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-300">Thumbnail Image</label>
-            {formData.thumbnail_url ? (
-              <div className="relative rounded-2xl overflow-hidden border border-white/10 aspect-[16/10]">
-                <img src={formData.thumbnail_url} alt="Thumbnail" className="w-full h-full object-cover" />
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-300">
+                Thumbnail Image
+              </label>
+              {(thumbnailPreview || formData.thumbnail_url) && !thumbnailUploading && (
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, thumbnail_url: '' })}
-                  className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/70 text-rose-400 hover:text-white"
+                  onClick={() => thumbnailInputRef.current?.click()}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-semibold transition-colors"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <RefreshCw className="w-3 h-3" /> Change Image
                 </button>
+              )}
+            </div>
+
+            <input
+              ref={thumbnailInputRef}
+              type="file"
+              accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+              onChange={handleThumbnailUpload}
+              className="hidden"
+            />
+
+            {(thumbnailPreview || formData.thumbnail_url) ? (
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 aspect-[16/10] group bg-black/40">
+                <img
+                  src={thumbnailPreview || getFullImageUrl(formData.thumbnail_url)}
+                  alt="Thumbnail"
+                  className={`w-full h-full object-cover transition-opacity ${thumbnailUploading ? 'opacity-40' : ''}`}
+                />
+
+                {thumbnailUploading && (
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-2 text-white">
+                    <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+                    <span className="text-xs font-semibold">Uploading thumbnail...</span>
+                  </div>
+                )}
+
+                {!thumbnailUploading && (
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 p-4">
+                    <button
+                      type="button"
+                      onClick={() => thumbnailInputRef.current?.click()}
+                      className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg flex items-center gap-1.5 transition-all"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" /> Change
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({ ...formData, thumbnail_url: '' });
+                        setThumbnailPreview(null);
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white text-xs font-semibold shadow-lg flex items-center gap-1.5 transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Remove
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-white/10 hover:border-indigo-500/50 cursor-pointer bg-white/5 transition-all text-center space-y-2">
-                <Upload className="w-8 h-8 text-indigo-400" />
-                <span className="text-xs text-gray-300 font-semibold">Click to Upload Thumbnail Image</span>
-                <input type="file" accept="image/*" onChange={handleThumbnailUpload} className="hidden" />
-              </label>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => !thumbnailUploading && thumbnailInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    thumbnailInputRef.current?.click();
+                  }
+                }}
+                className={`flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed transition-all text-center space-y-2.5 cursor-pointer ${
+                  thumbnailUploading
+                    ? 'border-indigo-500/50 bg-indigo-500/5'
+                    : 'border-white/10 hover:border-indigo-500/50 hover:bg-white/5 bg-white/[0.02]'
+                }`}
+              >
+                {thumbnailUploading ? (
+                  <>
+                    <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+                    <span className="text-xs text-indigo-300 font-semibold">Uploading thumbnail...</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                      <Upload className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <span className="text-xs text-white font-semibold block">Click to Upload Thumbnail Image</span>
+                      <span className="text-[11px] text-gray-400 block mt-0.5">PNG, JPG, JPEG, or WEBP up to 10MB</span>
+                    </div>
+                  </>
+                )}
+              </div>
             )}
+
             <input
               type="text"
               value={formData.thumbnail_url}
               onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
               placeholder="Or paste image URL directly..."
-              className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs"
+              className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs placeholder:text-gray-500 focus:outline-none focus:border-indigo-500"
             />
           </div>
 
           {/* Gallery Images */}
           <div className="space-y-3">
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-300">Project Gallery Images</label>
-            <label className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-white/10 hover:border-indigo-500/50 cursor-pointer bg-white/5 transition-all text-center space-y-2">
-              <Image className="w-8 h-8 text-violet-400" />
-              <span className="text-xs text-gray-300 font-semibold">Upload Multiple Gallery Images</span>
-              <input type="file" multiple accept="image/*" onChange={handleGalleryUpload} className="hidden" />
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-300">
+                Project Gallery Images
+              </label>
+              {formData.gallery_images.length > 0 && (
+                <span className="text-xs text-gray-400 font-medium">
+                  {formData.gallery_images.length} image{formData.gallery_images.length === 1 ? '' : 's'}
+                </span>
+              )}
+            </div>
+
+            <input
+              ref={galleryInputRef}
+              type="file"
+              multiple
+              accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+              onChange={handleGalleryUpload}
+              className="hidden"
+            />
+
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => !galleryUploading && galleryInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  galleryInputRef.current?.click();
+                }
+              }}
+              className={`flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed transition-all text-center space-y-2.5 cursor-pointer ${
+                galleryUploading
+                  ? 'border-violet-500/50 bg-violet-500/5'
+                  : 'border-white/10 hover:border-violet-500/50 hover:bg-white/5 bg-white/[0.02]'
+              }`}
+            >
+              {galleryUploading ? (
+                <>
+                  <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
+                  <span className="text-xs text-violet-300 font-semibold">
+                    Uploading {galleryUploadCount} image(s)...
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+                    <Image className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-xs text-white font-semibold block">Upload Multiple Gallery Images</span>
+                    <span className="text-[11px] text-gray-400 block mt-0.5">Select one or more PNG, JPG, JPEG, WEBP files</span>
+                  </div>
+                </>
+              )}
+            </div>
 
             {formData.gallery_images.length > 0 && (
-              <div className="grid grid-cols-3 gap-2 pt-2">
+              <div className="grid grid-cols-3 gap-2.5 pt-2">
                 {formData.gallery_images.map((imgUrl, gIdx) => (
-                  <div key={gIdx} className="relative rounded-xl overflow-hidden border border-white/10 aspect-square group">
-                    <img src={imgUrl} alt={`Gallery ${gIdx}`} className="w-full h-full object-cover" />
+                  <div key={gIdx} className="relative rounded-xl overflow-hidden border border-white/10 aspect-square group bg-black/40">
+                    <img src={getFullImageUrl(imgUrl)} alt={`Gallery ${gIdx + 1}`} className="w-full h-full object-cover" />
                     <button
                       type="button"
+                      title="Remove image"
                       onClick={() => setFormData({
                         ...formData,
                         gallery_images: formData.gallery_images.filter((_, i) => i !== gIdx)
                       })}
-                      className="absolute top-1 right-1 p-1 bg-black/80 rounded-md text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-1.5 right-1.5 p-1.5 bg-black/80 hover:bg-rose-600 rounded-lg text-rose-300 hover:text-white transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
+                    <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/70 text-[10px] text-gray-300 font-mono">
+                      #{gIdx + 1}
+                    </span>
                   </div>
                 ))}
               </div>

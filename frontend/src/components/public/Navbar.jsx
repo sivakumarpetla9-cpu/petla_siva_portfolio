@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShieldCheck, Download, Menu, X, ArrowUpRight, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { getFullImageUrl } from '../../api/client';
 
 export default function Navbar({ profile }) {
   const [scrolled, setScrolled] = useState(false);
@@ -37,8 +38,16 @@ export default function Navbar({ profile }) {
           
           {/* Logo & Available badge */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-violet-600 to-cyan-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-              {profile?.full_name ? profile.full_name.charAt(0) : 'A'}
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-violet-600 to-cyan-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform overflow-hidden">
+              {(profile?.avatar_display_url || profile?.avatar_url) ? (
+                <img
+                  src={getFullImageUrl(profile.avatar_display_url || profile.avatar_url)}
+                  alt={profile?.full_name || 'Avatar'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                profile?.full_name ? profile.full_name.charAt(0) : 'A'
+              )}
             </div>
             <div>
               <span className="font-bold text-lg text-white tracking-tight group-hover:text-indigo-400 transition-colors">

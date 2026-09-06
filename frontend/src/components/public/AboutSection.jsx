@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { UserCheck, Compass, Cpu, Layers, Sparkles, MapPin, Mail, ArrowUpRight } from 'lucide-react';
 import { Github, Linkedin } from '../icons/BrandIcons';
+import { getFullImageUrl } from '../../api/client';
 
 export default function AboutSection({ profile }) {
   const principles = [
@@ -27,7 +28,7 @@ export default function AboutSection({ profile }) {
     },
   ];
 
-  const profileAvatar = profile?.avatar_display_url || profile?.avatar_url || '/petla_siva_kumar.jpg';
+  const profileAvatar = getFullImageUrl(profile?.avatar_display_url || profile?.avatar_url) || '/petla_siva_kumar.jpg';
 
   return (
     <section id="about" className="py-24 relative border-t border-white/5 bg-[#0b0e17]/50">

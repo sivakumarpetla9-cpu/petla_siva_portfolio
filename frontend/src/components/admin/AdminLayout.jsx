@@ -1,16 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard, FolderKanban, Briefcase, GraduationCap,
   Cpu, Award, Image, Settings, LogOut, ExternalLink, Menu, X, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { fetchProfile, getFullImageUrl } from '../../api/client';
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    fetchProfile().then((data) => {
+      if (data) setProfile(data);
+    }).catch(() => {});
+  }, [location.pathname]);
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
@@ -72,11 +80,19 @@ export default function AdminLayout() {
         {/* User Footer */}
         <div className="p-4 border-t border-white/10 space-y-3">
           <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 border border-white/5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold flex items-center justify-center text-xs">
-              {user?.username ? user.username.charAt(0).toUpperCase() : 'A'}
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold flex items-center justify-center text-xs overflow-hidden shrink-0">
+              {(profile?.avatar_display_url || profile?.avatar_url) ? (
+                <img
+                  src={getFullImageUrl(profile.avatar_display_url || profile.avatar_url)}
+                  alt="Admin Avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                user?.username ? user.username.charAt(0).toUpperCase() : 'A'
+              )}
             </div>
             <div className="truncate flex-1">
-              <p className="text-xs font-bold text-white truncate">{user?.username || 'Admin User'}</p>
+              <p className="text-xs font-bold text-white truncate">{profile?.full_name || user?.username || 'Admin User'}</p>
               <p className="text-[10px] text-emerald-400 font-medium">Administrator</p>
             </div>
           </div>

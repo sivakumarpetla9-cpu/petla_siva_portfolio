@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Heart } from 'lucide-react';
+import { getFullImageUrl } from '../../api/client';
 
 export default function Footer({ profile }) {
   return (
@@ -9,8 +10,16 @@ export default function Footer({ profile }) {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-              {profile?.full_name ? profile.full_name.charAt(0) : 'A'}
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm overflow-hidden">
+              {(profile?.avatar_display_url || profile?.avatar_url) ? (
+                <img
+                  src={getFullImageUrl(profile.avatar_display_url || profile.avatar_url)}
+                  alt={profile?.full_name || 'Avatar'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                profile?.full_name ? profile.full_name.charAt(0) : 'A'
+              )}
             </div>
             <div>
               <p className="font-bold text-white text-base">{profile?.full_name || 'Petla Siva Kumar'}</p>

@@ -15,6 +15,49 @@ const api = axios.create({
   },
 });
 
+export const getFullImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+    return trimmed;
+  }
+  if (trimmed.startsWith('/media/')) {
+    const backendOrigin = import.meta.env.DEV ? '' : 'https://petla-siva-portfolio.onrender.com';
+    return `${backendOrigin}${trimmed}`;
+  }
+  return trimmed;
+};
+
+export const ALLOWED_IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp'];
+export const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+
+export const validateImageFile = (file) => {
+  if (!file) {
+    return { valid: false, error: 'No file selected.' };
+  }
+  const ext = file.name ? file.name.slice(file.name.lastIndexOf('.')).toLowerCase() : '';
+  const allowedExts = ['.png', '.jpg', '.jpeg', '.webp'];
+  const allowedMime = ['image/png', 'image/jpeg', 'image/webp'];
+
+  if (!allowedExts.includes(ext) && !allowedMime.includes(file.type?.toLowerCase())) {
+    return {
+      valid: false,
+      error: `Invalid file format (${ext || file.type || 'unknown'}). Only PNG, JPG, JPEG, and WEBP images are supported.`,
+    };
+  }
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+    return {
+      valid: false,
+      error: `File size exceeds the 10MB limit (${sizeMb} MB). Please choose a smaller image.`,
+    };
+  }
+
+  return { valid: true, error: null };
+};
+
 // Attach JWT token and cache-busting parameter to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');

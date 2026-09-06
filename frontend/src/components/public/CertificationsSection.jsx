@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Award, ExternalLink, CheckCircle, Sparkles, Eye, X } from 'lucide-react';
+import { getFullImageUrl } from '../../api/client';
 
 export default function CertificationsSection({ certifications = [] }) {
   const [selectedCertImage, setSelectedCertImage] = useState(null);
@@ -48,9 +49,9 @@ export default function CertificationsSection({ certifications = [] }) {
               </div>
 
               <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-2">
-                {cert.certificate_image_display_url ? (
+                {(cert.certificate_image_display_url || cert.certificate_image_url) ? (
                   <button
-                    onClick={() => setSelectedCertImage(cert.certificate_image_display_url)}
+                    onClick={() => setSelectedCertImage(getFullImageUrl(cert.certificate_image_display_url || cert.certificate_image_url))}
                     className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-300 hover:text-white bg-white/5 px-3 py-1.5 rounded-xl border border-white/10"
                   >
                     <Eye className="w-3.5 h-3.5 text-indigo-400" /> View Document

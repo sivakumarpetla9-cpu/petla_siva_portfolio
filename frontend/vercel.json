@@ -5,7 +5,11 @@
       "destination": "https://petla-siva-portfolio.onrender.com/api/:path*"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/media/:path*",
+      "destination": "https://petla-siva-portfolio.onrender.com/media/:path*"
+    },
+    {
+      "source": "/((?!api/|media/).*)",
       "destination": "/index.html"
     }
   ],

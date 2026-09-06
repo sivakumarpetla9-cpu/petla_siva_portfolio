@@ -10,20 +10,20 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_avatar_display_url(self, obj):
-        if obj.avatar:
+        url = obj.avatar_url or (obj.avatar.url if obj.avatar else '')
+        if url and url.startswith('/media/'):
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.avatar.url)
-            return obj.avatar.url
-        return obj.avatar_url or ''
+                return request.build_absolute_uri(url)
+        return url
 
     def get_resume_display_url(self, obj):
-        if obj.resume_file:
+        url = obj.resume_url or (obj.resume_file.url if obj.resume_file else '')
+        if url and url.startswith('/media/'):
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.resume_file.url)
-            return obj.resume_file.url
-        return obj.resume_url or ''
+                return request.build_absolute_uri(url)
+        return url
 
 
 class ProjectImageSerializer(serializers.ModelSerializer):
@@ -45,6 +45,7 @@ class ProjectImageSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     images = ProjectImageSerializer(many=True, read_only=True)
     thumbnail_display_url = serializers.SerializerMethodField()
+    gallery_display_images = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -54,12 +55,22 @@ class ProjectSerializer(serializers.ModelSerializer):
         }
 
     def get_thumbnail_display_url(self, obj):
-        if obj.thumbnail:
+        url = obj.thumbnail_url or (obj.thumbnail.url if obj.thumbnail else '')
+        if url and url.startswith('/media/'):
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.thumbnail.url)
-            return obj.thumbnail.url
-        return obj.thumbnail_url or ''
+                return request.build_absolute_uri(url)
+        return url
+
+    def get_gallery_display_images(self, obj):
+        request = self.context.get('request')
+        result = []
+        for img in (obj.gallery_images or []):
+            if isinstance(img, str) and img.startswith('/media/') and request:
+                result.append(request.build_absolute_uri(img))
+            else:
+                result.append(img)
+        return result
 
 
 class ExperienceSerializer(serializers.ModelSerializer):
@@ -70,12 +81,12 @@ class ExperienceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_company_logo_display_url(self, obj):
-        if obj.company_logo:
+        url = obj.company_logo_url or (obj.company_logo.url if obj.company_logo else '')
+        if url and url.startswith('/media/'):
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.company_logo.url)
-            return obj.company_logo.url
-        return obj.company_logo_url or ''
+                return request.build_absolute_uri(url)
+        return url
 
     def validate_work_mode(self, value):
         if value == 'Onsite':
@@ -125,12 +136,12 @@ class CertificationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_certificate_image_display_url(self, obj):
-        if obj.certificate_image:
+        url = obj.certificate_image_url or (obj.certificate_image.url if obj.certificate_image else '')
+        if url and url.startswith('/media/'):
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.certificate_image.url)
-            return obj.certificate_image.url
-        return obj.certificate_image_url or ''
+                return request.build_absolute_uri(url)
+        return url
 
 
 class MediaSerializer(serializers.ModelSerializer):

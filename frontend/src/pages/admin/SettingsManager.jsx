@@ -1,13 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Save, Upload, User, Mail, MapPin, FileText } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Save, Upload, User, Mail, MapPin, FileText, Trash2, RefreshCw, Loader2 } from 'lucide-react';
 import { Github, Linkedin, Twitter, Figma, Dribbble } from '../../components/icons/BrandIcons';
-import { fetchProfile, updateProfile, uploadMedia } from '../../api/client';
+import {
+  fetchProfile, updateProfile, uploadMedia,
+  getFullImageUrl, validateImageFile
+} from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 
 export default function SettingsManager() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [resumeUploading, setResumeUploading] = useState(false);
+
+  const avatarInputRef = useRef(null);
+  const resumeInputRef = useRef(null);
   const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -66,30 +75,65 @@ export default function SettingsManager() {
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      showToast(validation.error, 'error');
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+      return;
+    }
+
+    const tempBlobUrl = URL.createObjectURL(file);
+    setAvatarPreview(tempBlobUrl);
+    setAvatarUploading(true);
+
     try {
       const data = new FormData();
       data.append('file', file);
-      data.append('title', 'Avatar Profile');
+      data.append('title', `Avatar - ${formData.full_name || 'Profile'}`);
       const uploaded = await uploadMedia(data);
-      setFormData({ ...formData, avatar_url: uploaded.file_display_url });
-      showToast('Avatar image uploaded!', 'success');
+      const permanentUrl = uploaded.file_display_url || uploaded.file || '';
+      setFormData((prev) => ({ ...prev, avatar_url: permanentUrl }));
+      showToast('Avatar image uploaded successfully!', 'success');
     } catch (err) {
-      showToast('Avatar upload failed.', 'error');
+      console.error('Avatar upload error:', err);
+      const errorMsg =
+        err.response?.data?.detail ||
+        err.response?.data?.file?.[0] ||
+        'Avatar upload failed. Please try again.';
+      showToast(errorMsg, 'error');
+    } finally {
+      URL.revokeObjectURL(tempBlobUrl);
+      setAvatarPreview(null);
+      setAvatarUploading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
     }
   };
 
   const handleResumeUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      showToast('Please upload a PDF document for resume.', 'error');
+      if (resumeInputRef.current) resumeInputRef.current.value = '';
+      return;
+    }
+
+    setResumeUploading(true);
     try {
       const data = new FormData();
       data.append('file', file);
-      data.append('title', 'Resume Document');
+      data.append('title', `Resume - ${formData.full_name || 'Petla Siva Kumar'}`);
       const uploaded = await uploadMedia(data);
-      setFormData({ ...formData, resume_url: uploaded.file_display_url });
-      showToast('Resume PDF uploaded!', 'success');
+      const permanentUrl = uploaded.file_display_url || uploaded.file || '';
+      setFormData((prev) => ({ ...prev, resume_url: permanentUrl }));
+      showToast('Resume PDF uploaded successfully!', 'success');
     } catch (err) {
       showToast('Resume upload failed.', 'error');
+    } finally {
+      setResumeUploading(false);
+      if (resumeInputRef.current) resumeInputRef.current.value = '';
     }
   };
 
@@ -225,34 +269,146 @@ export default function SettingsManager() {
         <h3 className="text-lg font-bold text-white border-b border-white/10 pb-3">Avatar & Resume Media</h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* Avatar Profile Image */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-2">Avatar Profile Image</label>
-            <div className="flex items-center gap-4">
-              {formData.avatar_url ? (
-                <img src={formData.avatar_url} alt="Avatar" className="w-16 h-16 rounded-2xl object-cover ring-2 ring-indigo-500/50" />
-              ) : (
-                <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold text-xl">
-                  {formData.full_name.charAt(0)}
-                </div>
-              )}
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-2">
+              Avatar Profile Image
+            </label>
 
-              <label className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-white cursor-pointer">
-                Upload New Avatar
-                <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
-              </label>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+
+            <div className="flex flex-wrap items-center gap-5">
+              {/* Clickable Avatar Area */}
+              <div
+                role="button"
+                tabIndex={0}
+                title="Click to change avatar image"
+                onClick={() => !avatarUploading && avatarInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    avatarInputRef.current?.click();
+                  }
+                }}
+                className="relative w-20 h-20 rounded-2xl overflow-hidden cursor-pointer ring-2 ring-indigo-500/40 hover:ring-indigo-500 transition-all group shrink-0 bg-[#0f1422]"
+              >
+                {(avatarPreview || formData.avatar_url) ? (
+                  <img
+                    src={avatarPreview || getFullImageUrl(formData.avatar_url)}
+                    alt="Profile Avatar"
+                    className={`w-full h-full object-cover transition-opacity ${avatarUploading ? 'opacity-30' : 'group-hover:scale-105'}`}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-tr from-indigo-600/30 to-violet-600/30 flex items-center justify-center text-indigo-300 font-bold text-2xl">
+                    {formData.full_name?.charAt(0) || 'A'}
+                  </div>
+                )}
+
+                {avatarUploading ? (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 text-indigo-400 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
+                    <Upload className="w-5 h-5 text-indigo-300" />
+                    <span className="text-[10px] font-semibold mt-1">Change</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons & Help text */}
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={avatarUploading}
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition-all"
+                  >
+                    {(avatarPreview || formData.avatar_url) ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Change Avatar</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Avatar</span>
+                      </>
+                    )}
+                  </button>
+
+                  {(avatarPreview || formData.avatar_url) && (
+                    <button
+                      type="button"
+                      disabled={avatarUploading}
+                      onClick={() => {
+                        setFormData({ ...formData, avatar_url: '' });
+                        setAvatarPreview(null);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-rose-500/20 text-gray-400 hover:text-rose-300 border border-white/10 hover:border-rose-500/30 text-xs font-semibold transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remove</span>
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-gray-400">
+                  PNG, JPG, JPEG, or WEBP (Max 10MB).
+                </p>
+              </div>
             </div>
           </div>
 
+          {/* Resume PDF Document */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-2">Resume PDF Document</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-2">
+              Resume PDF Document
+            </label>
+            <input
+              ref={resumeInputRef}
+              type="file"
+              accept=".pdf"
+              onChange={handleResumeUpload}
+              className="hidden"
+            />
             <div className="space-y-2">
-              <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-indigo-300 cursor-pointer">
-                <FileText className="w-4 h-4" />
-                <span>Upload Resume PDF</span>
-                <input type="file" accept=".pdf" onChange={handleResumeUpload} className="hidden" />
-              </label>
+              <button
+                type="button"
+                disabled={resumeUploading}
+                onClick={() => resumeInputRef.current?.click()}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-indigo-300 hover:text-white transition-all cursor-pointer"
+              >
+                {resumeUploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+                    <span>Uploading PDF...</span>
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-4 h-4" />
+                    <span>{formData.resume_url ? 'Replace Resume PDF' : 'Upload Resume PDF'}</span>
+                  </>
+                )}
+              </button>
               {formData.resume_url && (
-                <p className="text-[11px] text-emerald-400 truncate">Resume attached: {formData.resume_url}</p>
+                <div className="flex items-center gap-2 text-[11px] text-emerald-400 truncate">
+                  <span>Attached:</span>
+                  <a
+                    href={getFullImageUrl(formData.resume_url)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline hover:text-emerald-300 truncate"
+                  >
+                    {formData.resume_url}
+                  </a>
+                </div>
               )}
             </div>
           </div>

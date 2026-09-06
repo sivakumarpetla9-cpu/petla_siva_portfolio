@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ExternalLink, ArrowRight, Sparkles, Star, BookOpen } from 'lucide-react';
 import { Github, Figma } from '../icons/BrandIcons';
+import { getFullImageUrl } from '../../api/client';
 
 export default function ProjectsSection({ projects = [] }) {
   const [activeCategory, setActiveCategory] = useState('All');
@@ -66,9 +67,9 @@ export default function ProjectsSection({ projects = [] }) {
               >
                 {/* Thumbnail Image Container */}
                 <div className="relative aspect-[16/10] overflow-hidden bg-gray-900">
-                  {project.thumbnail_display_url ? (
+                  {(project.thumbnail_display_url || project.thumbnail_url) ? (
                     <img
-                      src={project.thumbnail_display_url}
+                      src={getFullImageUrl(project.thumbnail_display_url || project.thumbnail_url)}
                       alt={project.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

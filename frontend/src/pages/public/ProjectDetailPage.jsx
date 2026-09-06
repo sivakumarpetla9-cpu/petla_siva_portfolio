@@ -8,7 +8,7 @@ import {
 import { Github, Figma } from '../../components/icons/BrandIcons';
 import Navbar from '../../components/public/Navbar';
 import Footer from '../../components/public/Footer';
-import { fetchProjectBySlug, fetchProfile } from '../../api/client';
+import { fetchProjectBySlug, fetchProfile, getFullImageUrl } from '../../api/client';
 
 const sectionIconMap = {
   overview: Sparkles,
@@ -187,7 +187,7 @@ export default function ProjectDetailPage() {
           </div>
 
           {/* Hero Thumbnail Banner */}
-          {project.thumbnail_display_url && (
+          {(project.thumbnail_display_url || project.thumbnail_url) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -195,7 +195,7 @@ export default function ProjectDetailPage() {
               className="rounded-3xl overflow-hidden border border-white/10 glass-panel shadow-2xl"
             >
               <img
-                src={project.thumbnail_display_url}
+                src={getFullImageUrl(project.thumbnail_display_url || project.thumbnail_url)}
                 alt={project.title}
                 className="w-full max-h-[500px] object-cover"
               />
@@ -235,7 +235,7 @@ export default function ProjectDetailPage() {
                         {sec.images.map((imgUrl, iIdx) => (
                           <img
                             key={iIdx}
-                            src={imgUrl}
+                            src={getFullImageUrl(imgUrl)}
                             alt={`${sec.title} screenshot ${iIdx + 1}`}
                             className="rounded-2xl border border-white/10 object-cover w-full h-64 hover:scale-[1.02] transition-transform"
                           />
@@ -253,13 +253,17 @@ export default function ProjectDetailPage() {
           )}
 
           {/* Project Gallery */}
-          {project.gallery_images && project.gallery_images.length > 0 && (
+          {((project.gallery_display_images && project.gallery_display_images.length > 0) || (project.gallery_images && project.gallery_images.length > 0)) && (
             <div className="space-y-6 pt-12 border-t border-white/10">
               <h3 className="text-2xl font-bold text-white">Project Showcase Gallery</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {project.gallery_images.map((imgUrl, gIdx) => (
-                  <div key={gIdx} className="rounded-2xl overflow-hidden border border-white/10 glass-panel">
-                    <img src={imgUrl} alt={`Gallery ${gIdx}`} className="w-full h-64 object-cover" />
+                {(project.gallery_display_images || project.gallery_images).map((imgUrl, gIdx) => (
+                  <div key={gIdx} className="rounded-2xl overflow-hidden border border-white/10 glass-panel bg-black/40">
+                    <img
+                      src={getFullImageUrl(imgUrl)}
+                      alt={`Gallery ${gIdx + 1}`}
+                      className="w-full h-64 object-cover hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
                 ))}
               </div>

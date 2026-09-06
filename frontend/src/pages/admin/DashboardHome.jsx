@@ -4,7 +4,7 @@ import {
   FolderKanban, CheckCircle2, FileText, Briefcase, Award, Image,
   Plus, Upload, Settings, Eye, Star, EyeOff, ArrowRight
 } from 'lucide-react';
-import { fetchDashboardStats, toggleProjectPublish, toggleProjectFeature } from '../../api/client';
+import { fetchDashboardStats, toggleProjectPublish, toggleProjectFeature, getFullImageUrl } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 
 export default function DashboardHome() {
@@ -137,8 +137,12 @@ export default function DashboardHome() {
             stats?.recent_projects?.map((proj) => (
               <div key={proj.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  {proj.thumbnail_display_url ? (
-                    <img src={proj.thumbnail_display_url} alt={proj.title} className="w-12 h-12 rounded-xl object-cover" />
+                  {(proj.thumbnail_display_url || proj.thumbnail_url) ? (
+                    <img
+                      src={getFullImageUrl(proj.thumbnail_display_url || proj.thumbnail_url)}
+                      alt={proj.title}
+                      className="w-12 h-12 rounded-xl object-cover"
+                    />
                   ) : (
                     <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
                       {proj.title.charAt(0)}

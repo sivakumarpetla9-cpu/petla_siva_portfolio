@@ -1,176 +1,215 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Send, Sparkles, CheckCircle2 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { Mail, Phone, MapPin, Sparkles, ArrowUpRight } from 'lucide-react';
+import { Linkedin, Github, Twitter, Figma } from '../icons/BrandIcons';
 
 export default function ContactSection({ profile }) {
-  const { showToast } = useToast();
-  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      setSubmitted(true);
-      showToast('Thank you! Your message has been sent successfully.', 'success');
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 1000);
-  };
+  const email = profile?.email || 'sivakumarpetla9@gmail.com';
+  const location = profile?.location || 'India';
+  const phone = profile?.phone || '';
+  const linkedin = profile?.linkedin_url || 'https://www.linkedin.com/in/siva-kumar-33b206377/';
+  const github = profile?.github_url || 'https://github.com/sivakumarpetla9-cpu';
+  const figma = profile?.figma_url || '';
 
   return (
-    <section id="contact" className="py-24 relative border-t border-white/5 bg-[#080b12]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="contact" className="py-24 relative border-t border-white/5 bg-[#080b12] overflow-hidden">
+      {/* Background ambient lighting */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none"></div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5" /> Get In Touch
+          </div>
           
-          {/* Left Info */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" /> Get In Touch
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            Let's create something <span className="text-gradient">extraordinary together</span>
+          </h2>
+          
+          <p className="text-gray-400 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
+            Whether you have a design challenge, frontend engineering opportunity, or just want to connect, feel free to reach out directly through any channel below.
+          </p>
+        </div>
+
+        {/* Primary Contact Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          {/* Direct Email Card */}
+          <motion.a
+            href={`mailto:${email}`}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+            className="group glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 hover:border-indigo-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 flex flex-col justify-between space-y-6"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-110 group-hover:bg-indigo-500/20 transition-all">
+                <Mail className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 block mb-1">Direct Email</span>
+                <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors truncate">
+                  {email}
+                </h3>
+                <p className="text-xs text-gray-400 mt-1">Available for inquiries, collaborations, and discussions</p>
+              </div>
             </div>
-
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Let's create something <span className="text-gradient">extraordinary together</span>
-            </h2>
-
-            <p className="text-gray-400 text-base leading-relaxed">
-              Whether you have a new product idea, design system challenge, or just want to connect, feel free to drop a message!
-            </p>
-
-            <div className="space-y-4 pt-4">
-              {profile?.email && (
-                <div className="flex items-center gap-4 p-4 rounded-2xl glass-panel border border-white/10">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                    <Mail className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="block text-xs text-gray-400 font-medium">Direct Email</span>
-                    <a href={`mailto:${profile.email}`} className="text-base font-bold text-white hover:text-indigo-400 transition-colors">
-                      {profile.email}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {profile?.location && (
-                <div className="flex items-center gap-4 p-4 rounded-2xl glass-panel border border-white/10">
-                  <div className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="block text-xs text-gray-400 font-medium">Location</span>
-                    <span className="text-base font-bold text-white">{profile.location}</span>
-                  </div>
-                </div>
-              )}
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-400 group-hover:text-indigo-300 pt-2 border-t border-white/5">
+              <span>Send an Email</span>
+              <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
-          </div>
+          </motion.a>
 
-          {/* Right Form */}
-          <div className="lg:col-span-7">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+          {/* LinkedIn Card */}
+          {linkedin && (
+            <motion.a
+              href={linkedin}
+              target="_blank"
+              rel="noreferrer"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="glass-panel p-8 sm:p-10 rounded-3xl border border-white/10 relative"
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="group glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 hover:border-cyan-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10 flex flex-col justify-between space-y-6"
             >
-              {submitted ? (
-                <div className="py-12 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
-                    <CheckCircle2 className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white">Message Sent!</h3>
-                  <p className="text-gray-400 text-sm max-w-md mx-auto">
-                    Thank you for reaching out. I'll get back to you within 24 hours.
-                  </p>
-                  <button
-                    onClick={() => setSubmitted(false)}
-                    className="px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-semibold text-white hover:bg-white/10"
-                  >
-                    Send Another Message
-                  </button>
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all">
+                  <Linkedin className="w-6 h-6" />
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
-                        Your Name
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Jane Doe"
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
-                      />
-                    </div>
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 block mb-1">LinkedIn Network</span>
+                  <h3 className="text-lg font-bold text-white group-hover:text-cyan-300 transition-colors">
+                    Connect on LinkedIn
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">Professional background, endorsements, and networking</p>
+                </div>
+              </div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-400 group-hover:text-cyan-300 pt-2 border-t border-white/5">
+                <span>View Profile</span>
+                <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </div>
+            </motion.a>
+          )}
 
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="jane@example.com"
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
-                      />
-                    </div>
+          {/* GitHub Card */}
+          {github && (
+            <motion.a
+              href={github}
+              target="_blank"
+              rel="noreferrer"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              className="group glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 hover:border-violet-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-500/10 flex flex-col justify-between space-y-6"
+            >
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 group-hover:scale-110 group-hover:bg-violet-500/20 transition-all">
+                  <Github className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-violet-400 block mb-1">GitHub Repositories</span>
+                  <h3 className="text-lg font-bold text-white group-hover:text-violet-300 transition-colors">
+                    Explore Code & Projects
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">Open source contributions, architectures, and experiments</p>
+                </div>
+              </div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-400 group-hover:text-violet-300 pt-2 border-t border-white/5">
+                <span>Visit GitHub</span>
+                <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </div>
+            </motion.a>
+          )}
+
+          {/* Location & Availability Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 flex flex-col justify-between space-y-6"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                <MapPin className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-1">Location & Work Mode</span>
+                <h3 className="text-lg font-bold text-white">
+                  {location}
+                </h3>
+                <p className="text-xs text-gray-400 mt-1">Open to Remote, Hybrid, and On-site opportunities</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 pt-2 border-t border-white/5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Available for Hire</span>
+            </div>
+          </motion.div>
+
+          {/* Phone Card (if present) */}
+          {phone ? (
+            <motion.a
+              href={`tel:${phone}`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.4 }}
+              className="group glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-500/10 flex flex-col justify-between space-y-6"
+            >
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all">
+                  <Phone className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-400 block mb-1">Direct Phone</span>
+                  <h3 className="text-lg font-bold text-white group-hover:text-amber-300 transition-colors">
+                    {phone}
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">Direct telephone calls & instant messaging</p>
+                </div>
+              </div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-400 group-hover:text-amber-300 pt-2 border-t border-white/5">
+                <span>Call Directly</span>
+                <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </div>
+            </motion.a>
+          ) : (
+            /* Figma Design Portfolio Card */
+            figma && (
+              <motion.a
+                href={figma}
+                target="_blank"
+                rel="noreferrer"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.4 }}
+                className="group glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 hover:border-violet-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-500/10 flex flex-col justify-between space-y-6"
+              >
+                <div className="space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 group-hover:scale-110 group-hover:bg-violet-500/20 transition-all">
+                    <Figma className="w-6 h-6" />
                   </div>
-
                   <div>
-                    <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
-                      Subject
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.subject}
-                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      placeholder="Project Inquiry / Consultation"
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
-                    />
+                    <span className="text-xs font-bold uppercase tracking-wider text-violet-400 block mb-1">Figma Community</span>
+                    <h3 className="text-lg font-bold text-white group-hover:text-violet-300 transition-colors">
+                      Figma Design Files
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1">Interactive prototypes, wireframes, and design systems</p>
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
-                      Message
-                    </label>
-                    <textarea
-                      rows={5}
-                      required
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      placeholder="Tell me about your project goals, timelines, or questions..."
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-indigo-500 transition-colors resize-none"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-700 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
-                  >
-                    {submitting ? (
-                      <span>Sending...</span>
-                    ) : (
-                      <>
-                        <span>Send Message</span>
-                        <Send className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-            </motion.div>
-          </div>
+                </div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-400 group-hover:text-violet-300 pt-2 border-t border-white/5">
+                  <span>View on Figma</span>
+                  <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </motion.a>
+            )
+          )}
 
         </div>
 
@@ -178,3 +217,4 @@ export default function ContactSection({ profile }) {
     </section>
   );
 }
+
