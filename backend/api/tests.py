@@ -162,3 +162,138 @@ class PortfolioAPITests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
+
+    # 12. Create Experience with Remote Work Mode (With and Without Location)
+    def test_create_experience_remote(self):
+        self.client.force_authenticate(user=self.admin_user)
+        # Without location (optional for Remote)
+        response = self.client.post('/api/experience/', {
+            'company': 'SunSysTechSol Pvt. Ltd.',
+            'role': 'UI/UX Designer Intern',
+            'work_mode': 'Remote',
+            'location': '',
+            'start_date': '2026',
+            'end_date': 'Present',
+            'is_current': True,
+            'description': 'Designing web flows and mobile components.'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['work_mode'], 'Remote')
+        self.assertEqual(response.data['location'], '')
+
+        # With optional location for Remote
+        response2 = self.client.post('/api/experience/', {
+            'company': 'SunSysTechSol Pvt. Ltd.',
+            'role': 'UI/UX Designer Intern',
+            'work_mode': 'Remote',
+            'location': 'Eluru, Andhra Pradesh, India',
+            'start_date': '2026',
+            'end_date': 'Present',
+            'is_current': True,
+            'description': 'Designing web flows.'
+        }, format='json')
+        self.assertEqual(response2.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response2.data['work_mode'], 'Remote')
+        self.assertEqual(response2.data['location'], 'Eluru, Andhra Pradesh, India')
+
+    # 13. Create Experience with On-site Work Mode & Location
+    def test_create_experience_onsite(self):
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post('/api/experience/', {
+            'company': 'Tech Corp',
+            'role': 'Frontend Developer',
+            'work_mode': 'On-site',
+            'location': 'Hyderabad, Telangana, India',
+            'start_date': '2026',
+            'end_date': 'Present',
+            'is_current': True,
+            'description': 'Building scalable frontend applications.'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['work_mode'], 'On-site')
+        self.assertEqual(response.data['location'], 'Hyderabad, Telangana, India')
+
+    # 14. On-site Requires Location (400 if empty)
+    def test_onsite_requires_location(self):
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post('/api/experience/', {
+            'company': 'Tech Corp',
+            'role': 'Frontend Developer',
+            'work_mode': 'On-site',
+            'location': '',
+            'start_date': '2026',
+            'description': 'Missing location'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('location', response.data)
+
+    # 15. Create Experience with Hybrid Work Mode & Location
+    def test_create_experience_hybrid(self):
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post('/api/experience/', {
+            'company': 'ABC Technologies',
+            'role': 'Frontend Developer Intern',
+            'work_mode': 'Hybrid',
+            'location': 'Bengaluru, Karnataka, India',
+            'start_date': '2026',
+            'end_date': 'Present',
+            'is_current': True,
+            'description': 'Hybrid design and frontend engineering.'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['work_mode'], 'Hybrid')
+        self.assertEqual(response.data['location'], 'Bengaluru, Karnataka, India')
+
+    # 16. Hybrid Requires Location (400 if empty)
+    def test_hybrid_requires_location(self):
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post('/api/experience/', {
+            'company': 'ABC Technologies',
+            'role': 'Frontend Developer',
+            'work_mode': 'Hybrid',
+            'location': '   ',
+            'start_date': '2026',
+            'description': 'Missing location'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('location', response.data)
+
+    # 17. Invalid Work Mode Validation Fails (400)
+    def test_invalid_work_mode_rejected(self):
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post('/api/experience/', {
+            'company': 'Invalid Mode Corp',
+            'role': 'Developer',
+            'work_mode': 'InvalidMode',
+            'location': 'Anywhere',
+            'start_date': '2026',
+            'description': 'Testing validation rejection'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('work_mode', response.data)
+
+    # 18. Update Experience Work Mode and Location
+    def test_update_experience_work_mode(self):
+        self.client.force_authenticate(user=self.admin_user)
+        exp = Experience.objects.create(
+            company='Orig Corp',
+            role='Designer',
+            work_mode='Remote',
+            location='',
+            start_date='2025',
+            description='Original desc'
+        )
+        response = self.client.put(f'/api/experience/{exp.id}/', {
+            'company': 'Orig Corp',
+            'role': 'Senior Designer',
+            'work_mode': 'Hybrid',
+            'location': 'Hyderabad, Telangana, India',
+            'start_date': '2025',
+            'end_date': 'Present',
+            'is_current': True,
+            'description': 'Updated desc'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        exp.refresh_from_db()
+        self.assertEqual(exp.work_mode, 'Hybrid')
+        self.assertEqual(exp.location, 'Hyderabad, Telangana, India')

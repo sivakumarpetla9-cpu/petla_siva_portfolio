@@ -2,6 +2,26 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Briefcase, Calendar, MapPin, Sparkles } from 'lucide-react';
 
+export function formatExperienceMeta(exp) {
+  const dateStr = `${exp.start_date || ''} — ${exp.is_current ? 'Present' : (exp.end_date || 'Present')}`;
+  let mode = exp.work_mode;
+  if (mode === 'Onsite') mode = 'On-site';
+  if (!mode) mode = 'Remote';
+
+  const rawLoc = exp.location?.trim() || '';
+  const isDefaultOrRemote = !rawLoc || rawLoc.toLowerCase() === 'remote' || rawLoc.toLowerCase().includes('san francisco');
+  const loc = isDefaultOrRemote ? '' : rawLoc;
+
+  if (mode === 'On-site') {
+    return loc ? `${dateStr} · On-site · ${loc}` : `${dateStr} · On-site`;
+  }
+  if (mode === 'Hybrid') {
+    return loc ? `${dateStr} · Hybrid · ${loc}` : `${dateStr} · Hybrid`;
+  }
+  // Remote
+  return `${dateStr} · Remote`;
+}
+
 export default function ExperienceSection({ experiences = [] }) {
   return (
     <section id="experience" className="py-24 relative border-t border-white/5">
@@ -46,16 +66,10 @@ export default function ExperienceSection({ experiences = [] }) {
                   </div>
 
                   <div className="flex items-center gap-3 text-xs font-medium text-gray-400">
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300">
                       <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-                      {exp.start_date} — {exp.is_current ? 'Present' : exp.end_date}
+                      {formatExperienceMeta(exp)}
                     </span>
-                    {exp.location && (
-                      <span className="hidden sm:inline-flex items-center gap-1 text-gray-400">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {exp.location}
-                      </span>
-                    )}
                   </div>
                 </div>
 

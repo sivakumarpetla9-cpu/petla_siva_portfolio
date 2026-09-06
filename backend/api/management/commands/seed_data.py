@@ -61,7 +61,8 @@ class Command(BaseCommand):
             Experience.objects.create(
                 company="Self-Driven Projects & Internships",
                 role="UI/UX & Frontend Trainee",
-                location="Remote",
+                work_mode="Remote",
+                location="",
                 employment_type="Internship",
                 start_date="2024",
                 end_date="Present",

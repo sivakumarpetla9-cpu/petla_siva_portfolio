@@ -77,6 +77,33 @@ class ExperienceSerializer(serializers.ModelSerializer):
             return obj.company_logo.url
         return obj.company_logo_url or ''
 
+    def validate_work_mode(self, value):
+        if value == 'Onsite':
+            value = 'On-site'
+        valid_modes = [c[0] for c in Experience.WORK_MODE_CHOICES]
+        if value not in valid_modes:
+            raise serializers.ValidationError(
+                f"Invalid work mode '{value}'. Must be one of: {', '.join(valid_modes)}."
+            )
+        return value
+
+    def validate(self, attrs):
+        work_mode = attrs.get('work_mode', getattr(self.instance, 'work_mode', 'Remote') if self.instance else 'Remote')
+        if work_mode == 'Onsite':
+            work_mode = 'On-site'
+            attrs['work_mode'] = 'On-site'
+
+        location = attrs.get('location', getattr(self.instance, 'location', '') if self.instance else '')
+        if isinstance(location, str):
+            location = location.strip()
+
+        if work_mode in ['On-site', 'Hybrid'] and not location:
+            raise serializers.ValidationError({
+                'location': f"Location is required for {work_mode} work mode."
+            })
+
+        return attrs
+
 
 class EducationSerializer(serializers.ModelSerializer):
     class Meta:

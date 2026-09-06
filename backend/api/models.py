@@ -77,8 +77,19 @@ class ProjectImage(models.Model):
 
 
 class Experience(models.Model):
+    WORK_MODE_CHOICES = [
+        ('Remote', 'Remote'),
+        ('On-site', 'On-site'),
+        ('Hybrid', 'Hybrid'),
+    ]
+
     company = models.CharField(max_length=200)
     role = models.CharField(max_length=200)
+    work_mode = models.CharField(
+        max_length=20,
+        choices=WORK_MODE_CHOICES,
+        default='Remote'
+    )
     location = models.CharField(max_length=150, blank=True, default="")
     employment_type = models.CharField(max_length=100, blank=True, default="Full-time")
     start_date = models.CharField(max_length=100)

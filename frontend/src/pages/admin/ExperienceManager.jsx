@@ -13,6 +13,7 @@ export default function ExperienceManager() {
   const [formData, setFormData] = useState({
     company: '',
     role: '',
+    work_mode: 'Remote',
     location: '',
     employment_type: 'Full-time',
     start_date: '',
@@ -43,9 +44,10 @@ export default function ExperienceManager() {
     setFormData({
       company: '',
       role: '',
-      location: 'San Francisco, CA',
+      work_mode: 'Remote',
+      location: '',
       employment_type: 'Full-time',
-      start_date: '2023',
+      start_date: new Date().getFullYear().toString(),
       end_date: 'Present',
       is_current: true,
       description: '',
@@ -56,10 +58,15 @@ export default function ExperienceManager() {
 
   const handleOpenEdit = (item) => {
     setEditingItem(item);
+    let mode = item.work_mode;
+    if (mode === 'Onsite') mode = 'On-site';
+    if (!mode) mode = 'Remote';
+
     setFormData({
       company: item.company || '',
       role: item.role || '',
-      location: item.location || '',
+      work_mode: mode,
+      location: item.location && item.location.toLowerCase() !== 'remote' ? item.location : (item.work_mode && item.location ? item.location : ''),
       employment_type: item.employment_type || 'Full-time',
       start_date: item.start_date || '',
       end_date: item.end_date || 'Present',
@@ -83,6 +90,10 @@ export default function ExperienceManager() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if ((formData.work_mode === 'On-site' || formData.work_mode === 'Hybrid') && !formData.location?.trim()) {
+      showToast(`Location is required for ${formData.work_mode} work mode.`, 'error');
+      return;
+    }
     try {
       if (editingItem) {
         await updateExperience(editingItem.id, formData);
@@ -94,7 +105,8 @@ export default function ExperienceManager() {
       setModalOpen(false);
       loadExperiences();
     } catch (err) {
-      showToast('Failed to save experience.', 'error');
+      const errMsg = err.response?.data?.location?.[0] || err.response?.data?.work_mode?.[0] || 'Failed to save experience.';
+      showToast(errMsg, 'error');
     }
   };
 
@@ -134,12 +146,20 @@ export default function ExperienceManager() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs text-gray-400 pl-13">
+                <div className="flex flex-wrap items-center gap-2.5 text-xs text-gray-400 pl-13">
                   <span className="inline-flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5 text-indigo-400" />
                     {exp.start_date} — {exp.is_current ? 'Present' : exp.end_date}
                   </span>
-                  {exp.location && <span>• {exp.location}</span>}
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 font-semibold border border-indigo-500/20 text-[11px]">
+                    {exp.work_mode || 'Remote'}
+                  </span>
+                  {exp.location && exp.location.toLowerCase() !== 'remote' && (
+                    <span className="inline-flex items-center gap-1 text-gray-300">
+                      <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                      {exp.location}
+                    </span>
+                  )}
                 </div>
 
                 <p className="text-sm text-gray-300 pl-13 pt-1">{exp.description}</p>
@@ -241,6 +261,42 @@ export default function ExperienceManager() {
                 <label htmlFor="is_current" className="text-xs font-semibold text-gray-300 cursor-pointer">
                   Currently Working Here
                 </label>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    Work Mode <span className="text-rose-400">*</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.work_mode}
+                    onChange={(e) => setFormData({ ...formData, work_mode: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#0f1422] border border-white/10 text-white text-sm focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="Remote" className="bg-[#0f1422] text-white">Remote</option>
+                    <option value="On-site" className="bg-[#0f1422] text-white">On-site</option>
+                    <option value="Hybrid" className="bg-[#0f1422] text-white">Hybrid</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">
+                    Location {formData.work_mode !== 'Remote' ? (
+                      <span className="text-rose-400">*</span>
+                    ) : (
+                      <span className="text-gray-500 font-normal">(optional)</span>
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    required={formData.work_mode === 'On-site' || formData.work_mode === 'Hybrid'}
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder={formData.work_mode === 'Remote' ? 'Leave empty or enter city, state/country' : 'Enter city, state/country (e.g. Hyderabad, Telangana, India)'}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-indigo-500 placeholder:text-gray-500"
+                  />
+                </div>
               </div>
 
               <div>
