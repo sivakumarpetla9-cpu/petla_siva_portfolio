@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { loginApi, logoutApi, fetchCurrentUser } from '../api/client';
+import { isJwtValid } from '../components/admin/ProtectedRoute';
 
 const AuthContext = createContext();
 
@@ -8,9 +9,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     const token = localStorage.getItem('access_token');
-    if (!token) {
+    if (!token || !isJwtValid(token)) {
+      logoutApi();
       setIsAuthenticated(false);
       setUser(null);
       setLoading(false);
@@ -18,16 +20,24 @@ export const AuthProvider = ({ children }) => {
     }
     try {
       const userData = await fetchCurrentUser();
-      setUser(userData);
-      setIsAuthenticated(true);
+      const isAdmin = Boolean(userData && (userData.is_staff || userData.is_superuser));
+      if (!isAdmin) {
+        logoutApi();
+        setIsAuthenticated(false);
+        setUser(null);
+      } else {
+        setUser(userData);
+        setIsAuthenticated(true);
+      }
     } catch (err) {
       console.error('Auth verification failed:', err);
+      logoutApi();
       setIsAuthenticated(false);
       setUser(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     checkAuth();
@@ -39,11 +49,20 @@ export const AuthProvider = ({ children }) => {
 
     window.addEventListener('auth-logout', handleLogout);
     return () => window.removeEventListener('auth-logout', handleLogout);
-  }, []);
+  }, [checkAuth]);
 
   const login = async (username, password) => {
     const data = await loginApi(username, password);
-    await checkAuth();
+    const userData = await fetchCurrentUser();
+    const isAdmin = Boolean(userData && (userData.is_staff || userData.is_superuser));
+    if (!isAdmin) {
+      logoutApi();
+      setIsAuthenticated(false);
+      setUser(null);
+      throw new Error('Access denied: Staff administrator privileges required.');
+    }
+    setUser(userData);
+    setIsAuthenticated(true);
     return data;
   };
 

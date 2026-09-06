@@ -32,12 +32,20 @@ api.interceptors.request.use((config) => {
   return config;
 }, (error) => Promise.reject(error));
 
-// Intercept 401s for token refresh
+export const logoutApi = () => {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('auth-logout'));
+  }
+};
+
+// Intercept 401s for token refresh and session invalidation
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest?._retry) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken) {
@@ -49,10 +57,16 @@ api.interceptors.response.use(
           localStorage.setItem('access_token', newAccessToken);
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return api(originalRequest);
-        } catch (refreshErr) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          window.dispatchEvent(new Event('auth-logout'));
+        } catch {
+          logoutApi();
+          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && window.location.pathname !== '/admin/login') {
+            window.location.href = '/admin/login';
+          }
+        }
+      } else {
+        logoutApi();
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && window.location.pathname !== '/admin/login') {
+          window.location.href = '/admin/login';
         }
       }
     }
@@ -70,12 +84,6 @@ export const loginApi = async (username, password) => {
     localStorage.setItem('refresh_token', res.data.refresh);
   }
   return res.data;
-};
-
-export const logoutApi = () => {
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('refresh_token');
-  window.dispatchEvent(new Event('auth-logout'));
 };
 
 export const fetchCurrentUser = async () => {

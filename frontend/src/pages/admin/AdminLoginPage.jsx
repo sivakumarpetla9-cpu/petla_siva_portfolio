@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ShieldCheck, Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -9,9 +9,25 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { isAuthenticated, user, login } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redirect if already authenticated as an admin
+  useEffect(() => {
+    if (isAuthenticated && (user?.is_staff || user?.is_superuser)) {
+      const redirectPath = location.state?.from?.pathname || '/admin';
+      navigate(redirectPath, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate, location]);
+
+  // Display error passed from ProtectedAdminRoute redirect if any
+  useEffect(() => {
+    if (location.state?.error && !error) {
+      setError(location.state.error);
+    }
+  }, [location.state, error]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,15 +37,18 @@ export default function AdminLoginPage() {
     try {
       await login(cleanUsername, password);
       showToast('Logged in successfully', 'success');
-      navigate('/admin');
+      const redirectPath = location.state?.from?.pathname || '/admin';
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       console.error('Login error:', err);
       const errorMsg =
-        err.response?.data?.detail ||
-        (err.response?.status === 401 ? 'Invalid username or password.' : null) ||
-        (err.message === 'Network Error' || !err.response
-          ? 'Cannot connect to backend server. Please check your internet connection or verify the backend is running.'
-          : 'Authentication failed. Please check your credentials.');
+        err.message === 'Access denied: Staff administrator privileges required.'
+          ? err.message
+          : (err.response?.data?.detail ||
+             (err.response?.status === 401 ? 'Invalid username or password.' : null) ||
+             (err.message === 'Network Error' || !err.response
+               ? 'Cannot connect to backend server. Please check your internet connection or verify the backend is running.'
+               : 'Authentication failed. Please check your credentials.'));
       setError(errorMsg);
     } finally {
       setLoading(false);

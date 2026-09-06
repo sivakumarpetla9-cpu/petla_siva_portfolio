@@ -8,7 +8,7 @@ import HomePage from './pages/public/HomePage';
 import ProjectDetailPage from './pages/public/ProjectDetailPage';
 
 // Admin Pages
-import ProtectedRoute from './components/admin/ProtectedRoute';
+import ProtectedAdminRoute from './components/admin/ProtectedRoute';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import DashboardHome from './pages/admin/DashboardHome';
@@ -35,7 +35,7 @@ export default function App() {
             <Route path="/admin/login" element={<AdminLoginPage />} />
 
             {/* Protected Admin Routes */}
-            <Route path="/admin" element={<ProtectedRoute />}>
+            <Route path="/admin" element={<ProtectedAdminRoute />}>
               <Route element={<AdminLayout />}>
                 <Route index element={<DashboardHome />} />
                 <Route path="projects" element={<ProjectsManager />} />
